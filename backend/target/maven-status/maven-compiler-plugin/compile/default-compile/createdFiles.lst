@@ -1,1 +1,5 @@
+com/galcina/backend/service/ActivityService.class
+com/galcina/backend/entity/Activity.class
+com/galcina/backend/repository/ActivityRepository.class
 com/galcina/backend/BackendApplication.class
+com/galcina/backend/controller/ActivityController.class
