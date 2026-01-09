@@ -14,6 +14,12 @@ function App() {
   });
   const [formErrors, setFormErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  
+  // Filter state
+  const [searchText, setSearchText] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedDate, setSelectedDate] = useState('all');
+  const [sortOrder, setSortOrder] = useState('desc');
 
   // Load activities on mount
   useEffect(() => {
@@ -141,6 +147,61 @@ function App() {
     }
   };
 
+  // Get unique categories from activities
+  const getUniqueCategories = () => {
+    const categories = activities
+      .map(activity => activity.category)
+      .filter((category, index, self) => self.indexOf(category) === index)
+      .sort();
+    return categories;
+  };
+
+  // Filter and sort activities
+  const getFilteredAndSortedActivities = () => {
+    let filtered = [...activities];
+
+    // Search filter (name or description, case-insensitive)
+    if (searchText.trim()) {
+      const searchLower = searchText.toLowerCase();
+      filtered = filtered.filter(activity => 
+        activity.name.toLowerCase().includes(searchLower) ||
+        (activity.description && activity.description.toLowerCase().includes(searchLower))
+      );
+    }
+
+    // Category filter
+    if (selectedCategory !== 'All') {
+      filtered = filtered.filter(activity => activity.category === selectedCategory);
+    }
+
+    // Date filter
+    if (selectedDate !== 'all') {
+      filtered = filtered.filter(activity => activity.date === selectedDate);
+    }
+
+    // Sort by date
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+    });
+
+    return filtered;
+  };
+
+  const filteredActivities = getFilteredAndSortedActivities();
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchText('');
+    setSelectedCategory('All');
+    setSelectedDate('all');
+    setSortOrder('desc');
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters = searchText.trim() || selectedCategory !== 'All' || selectedDate !== 'all';
+
   return (
     <div className="app">
       <header>
@@ -258,8 +319,106 @@ function App() {
           ) : activities.length === 0 ? (
             <div className="empty-state">No activities yet. Add one to get started!</div>
           ) : (
-            <div className="activities-list">
-              {activities.map(activity => (
+            <>
+              {/* Filter Controls */}
+              <div className="filters-container">
+                <div className="filters-grid">
+                  <div className="filter-group">
+                    <label htmlFor="search">Search</label>
+                    <input
+                      type="text"
+                      id="search"
+                      placeholder="Search by name or description..."
+                      value={searchText}
+                      onChange={(e) => setSearchText(e.target.value)}
+                      className="filter-input"
+                    />
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="category-filter">Category</label>
+                    <select
+                      id="category-filter"
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="filter-select"
+                    >
+                      <option value="All">All</option>
+                      {getUniqueCategories().map(category => (
+                        <option key={category} value={category}>{category}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="date-filter">Date</label>
+                    <div className="date-filter-wrapper">
+                      <select
+                        id="date-filter-mode"
+                        value={selectedDate === 'all' ? 'all' : 'specific'}
+                        onChange={(e) => {
+                          if (e.target.value === 'all') {
+                            setSelectedDate('all');
+                          } else {
+                            // Set to today's date or first available date
+                            const today = new Date().toISOString().split('T')[0];
+                            const firstDate = activities.length > 0 
+                              ? activities.map(a => a.date).sort()[0]
+                              : today;
+                            setSelectedDate(firstDate);
+                          }
+                        }}
+                        className="filter-select date-mode-select"
+                      >
+                        <option value="all">All</option>
+                        <option value="specific">Specific Date</option>
+                      </select>
+                      {selectedDate !== 'all' && (
+                        <input
+                          type="date"
+                          value={selectedDate}
+                          onChange={(e) => setSelectedDate(e.target.value)}
+                          className="filter-input date-input"
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="sort-order">Sort</label>
+                    <select
+                      id="sort-order"
+                      value={sortOrder}
+                      onChange={(e) => setSortOrder(e.target.value)}
+                      className="filter-select"
+                    >
+                      <option value="desc">Newest First</option>
+                      <option value="asc">Oldest First</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="filters-footer">
+                  <div className="results-count">
+                    {filteredActivities.length} {filteredActivities.length === 1 ? 'result' : 'results'}
+                  </div>
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="clear-filters-btn"
+                    >
+                      Clear Filters
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {filteredActivities.length === 0 ? (
+                <div className="empty-state">No activities match your filters.</div>
+              ) : (
+                <div className="activities-list">
+                  {filteredActivities.map(activity => (
                 <div key={activity.id} className="activity-card">
                   <div className="activity-header">
                     <h3 className="activity-name">{activity.name}</h3>
@@ -288,8 +447,10 @@ function App() {
                     )}
                   </div>
                 </div>
-              ))}
-            </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </section>
       </div>
