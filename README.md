@@ -1,8 +1,10 @@
 # Activity Tracker
 
-Full-stack activity journal application with Spring Boot backend and React frontend.
+Full-stack activity journal application with Spring Boot backend and React frontend. This project allows users to create, view, and manage their activity journal entries. It was created as a junior full-stack test assignment.
 
 ## Project Structure
+
+The project is organized into two main directories: the backend contains the Spring Boot REST API, and the frontend contains the React application.
 
 ```
 activity-tracker/
@@ -47,13 +49,16 @@ The frontend will start on `http://localhost:3000`
 
 ## API Endpoints
 
+The REST API provides endpoints for managing activities. Base URL: `http://localhost:8080`
+
 - `GET /api/activities` - List all activities
 - `POST /api/activities` - Create a new activity
 - `DELETE /api/activities/{id}` - Delete an activity by ID
 
 ## Database
 
-The application uses H2 in-memory database. Access the H2 console at:
+The application uses H2 in-memory database for development. All data is stored in memory and will be reset when the backend application is restarted. Access the H2 console at:
+
 - URL: http://localhost:8080/h2-console
 - JDBC URL: `jdbc:h2:mem:activitydb`
 - Username: `sa`
