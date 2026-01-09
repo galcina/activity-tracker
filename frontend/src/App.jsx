@@ -202,6 +202,61 @@ function App() {
   // Check if any filters are active
   const hasActiveFilters = searchText.trim() || selectedCategory !== 'All' || selectedDate !== 'all';
 
+  // Calculate statistics from filtered activities
+  const calculateStatistics = () => {
+    if (filteredActivities.length === 0) {
+      return {
+        totalCount: 0,
+        totalMinutes: 0,
+        byCategory: [],
+        byDate: []
+      };
+    }
+
+    // Total count and minutes
+    const totalCount = filteredActivities.length;
+    const totalMinutes = filteredActivities.reduce((sum, activity) => 
+      sum + (activity.durationMinutes || 0), 0
+    );
+
+    // By Category
+    const categoryMap = new Map();
+    filteredActivities.forEach(activity => {
+      const category = activity.category || 'Uncategorized';
+      const current = categoryMap.get(category) || { count: 0, minutes: 0 };
+      categoryMap.set(category, {
+        count: current.count + 1,
+        minutes: current.minutes + (activity.durationMinutes || 0)
+      });
+    });
+    const byCategory = Array.from(categoryMap.entries())
+      .map(([category, data]) => ({ category, ...data }))
+      .sort((a, b) => b.minutes - a.minutes);
+
+    // By Date
+    const dateMap = new Map();
+    filteredActivities.forEach(activity => {
+      const date = activity.date;
+      const current = dateMap.get(date) || { count: 0, minutes: 0 };
+      dateMap.set(date, {
+        count: current.count + 1,
+        minutes: current.minutes + (activity.durationMinutes || 0)
+      });
+    });
+    const byDate = Array.from(dateMap.entries())
+      .map(([date, data]) => ({ date, ...data }))
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    return {
+      totalCount,
+      totalMinutes,
+      byCategory,
+      byDate
+    };
+  };
+
+  const stats = calculateStatistics();
+
   return (
     <div className="app">
       <header>
@@ -320,6 +375,70 @@ function App() {
             <div className="empty-state">No activities yet. Add one to get started!</div>
           ) : (
             <>
+              {/* Statistics Section */}
+              <div className="statistics-section">
+                <h3>Statistics</h3>
+                
+                <div className="stats-summary">
+                  <div className="stat-card">
+                    <div className="stat-value">{stats.totalCount}</div>
+                    <div className="stat-label">Total Activities</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-value">{stats.totalMinutes}</div>
+                    <div className="stat-label">Total Minutes</div>
+                  </div>
+                </div>
+
+                {stats.byCategory.length > 0 && (
+                  <div className="stats-breakdown">
+                    <h4>By Category</h4>
+                    <table className="stats-table">
+                      <thead>
+                        <tr>
+                          <th>Category</th>
+                          <th>Count</th>
+                          <th>Minutes</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {stats.byCategory.map(({ category, count, minutes }) => (
+                          <tr key={category}>
+                            <td>{category}</td>
+                            <td>{count}</td>
+                            <td>{minutes}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {stats.byDate.length > 0 && (
+                  <div className="stats-breakdown">
+                    <h4>By Date</h4>
+                    <table className="stats-table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Count</th>
+                          <th>Minutes</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {stats.byDate.map(({ date, count, minutes }) => (
+                          <tr key={date}>
+                            <td>{formatDate(date)}</td>
+                            <td>{count}</td>
+                            <td>{minutes}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
               {/* Filter Controls */}
               <div className="filters-container">
                 <div className="filters-grid">
