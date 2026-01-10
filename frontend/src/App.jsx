@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchActivities, createActivity, deleteActivity } from './api';
+import { fetchActivities, createActivity, updateActivity, deleteActivity } from './api';
 
 function App() {
   const [activities, setActivities] = useState([]);
@@ -14,6 +14,7 @@ function App() {
   });
   const [formErrors, setFormErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [editingActivityId, setEditingActivityId] = useState(null);
   
   // Filter state
   const [searchText, setSearchText] = useState('');
@@ -91,7 +92,7 @@ function App() {
     setError(null);
     
     try {
-      const activityToCreate = {
+      const activityData = {
         name: formData.name.trim(),
         description: formData.description.trim() || null,
         category: formData.category.trim(),
@@ -99,7 +100,14 @@ function App() {
         durationMinutes: parseInt(formData.durationMinutes)
       };
       
-      await createActivity(activityToCreate);
+      if (editingActivityId) {
+        // Update existing activity
+        await updateActivity(editingActivityId, activityData);
+        setEditingActivityId(null);
+      } else {
+        // Create new activity
+        await createActivity(activityData);
+      }
       
       // Reset form
       setFormData({
@@ -118,6 +126,34 @@ function App() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleEdit = (activity) => {
+    setFormData({
+      name: activity.name || '',
+      description: activity.description || '',
+      category: activity.category || '',
+      date: activity.date || '',
+      durationMinutes: activity.durationMinutes || ''
+    });
+    setEditingActivityId(activity.id);
+    setFormErrors({});
+    setError(null);
+    // Scroll to form section
+    document.querySelector('.form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingActivityId(null);
+    setFormData({
+      name: '',
+      description: '',
+      category: '',
+      date: '',
+      durationMinutes: ''
+    });
+    setFormErrors({});
+    setError(null);
   };
 
   const handleDelete = async (id) => {
@@ -272,7 +308,7 @@ function App() {
       <div className="container">
         {/* Form Section */}
         <section className="form-section">
-          <h2>Add New Activity</h2>
+          <h2>{editingActivityId ? 'Edit Activity' : 'Add New Activity'}</h2>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label htmlFor="name">
@@ -355,13 +391,28 @@ function App() {
               />
             </div>
 
-            <button 
-              type="submit" 
-              className="submit-btn"
-              disabled={submitting}
-            >
-              {submitting ? 'Adding...' : 'Add Activity'}
-            </button>
+            <div className="form-actions">
+              <button 
+                type="submit" 
+                className="submit-btn"
+                disabled={submitting}
+              >
+                {submitting 
+                  ? (editingActivityId ? 'Saving...' : 'Adding...') 
+                  : (editingActivityId ? 'Save Changes' : 'Add Activity')
+                }
+              </button>
+              {editingActivityId && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="cancel-btn"
+                  disabled={submitting}
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
           </form>
         </section>
 
@@ -541,13 +592,22 @@ function App() {
                 <div key={activity.id} className="activity-card">
                   <div className="activity-header">
                     <h3 className="activity-name">{activity.name}</h3>
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDelete(activity.id)}
-                      title="Delete activity"
-                    >
-                      ×
-                    </button>
+                    <div className="activity-actions">
+                      <button
+                        className="edit-btn"
+                        onClick={() => handleEdit(activity)}
+                        title="Edit activity"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="delete-btn"
+                        onClick={() => handleDelete(activity.id)}
+                        title="Delete activity"
+                      >
+                        ×
+                      </button>
+                    </div>
                   </div>
                   <div className="activity-details">
                     <div className="activity-meta">

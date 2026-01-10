@@ -40,6 +40,33 @@ export async function createActivity(activity) {
 }
 
 /**
+ * Update an existing activity
+ */
+export async function updateActivity(id, activity) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(activity),
+    });
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('Activity not found');
+      }
+      const errorText = await response.text();
+      throw new Error(errorText || `Failed to update activity: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    throw new Error(`Error updating activity: ${error.message}`);
+  }
+}
+
+/**
  * Delete an activity by ID
  */
 export async function deleteActivity(id) {
