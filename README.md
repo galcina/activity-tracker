@@ -94,3 +94,24 @@ See `frontend/README.md` for detailed frontend documentation.
 - React 18
 - Vite
 - Fetch API
+
+## Docker
+
+Run the entire application using Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+This will build and start both services:
+
+- **Backend**: http://localhost:8080
+- **Frontend**: http://localhost:3000
+
+The frontend is configured to communicate with the backend at `http://localhost:8080`. The API base URL can be customized via the `VITE_API_BASE_URL` build argument in `docker-compose.yml`.
+
+To stop the services:
+
+```bash
+docker compose down
+```
