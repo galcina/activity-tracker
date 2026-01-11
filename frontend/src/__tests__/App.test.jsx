@@ -2,8 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { act } from 'react'
+import { Provider } from 'react-redux'
+import { configureStore } from '@reduxjs/toolkit'
 import App from '../App'
 import * as api from '../api'
+import activitiesReducer from '../store/activitiesSlice'
 
 // Helper to flush pending promises
 const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0))
@@ -15,6 +18,15 @@ vi.mock('../api', () => ({
   updateActivity: vi.fn(),
   deleteActivity: vi.fn()
 }))
+
+// Helper to create store for testing
+const createTestStore = () => {
+  return configureStore({
+    reducer: {
+      activities: activitiesReducer
+    }
+  })
+}
 
 describe('App', () => {
   const mockActivities = [
@@ -42,9 +54,14 @@ describe('App', () => {
 
   it('renders main headings and sections', async () => {
     api.fetchActivities.mockResolvedValue([])
+    const store = createTestStore()
 
     await act(async () => {
-      render(<App />)
+      render(
+        <Provider store={store}>
+          <App />
+        </Provider>
+      )
       await flushPromises()
     })
 
@@ -59,9 +76,14 @@ describe('App', () => {
   it('filters activities by search text', async () => {
     const user = userEvent.setup()
     api.fetchActivities.mockResolvedValue(mockActivities)
+    const store = createTestStore()
 
     await act(async () => {
-      render(<App />)
+      render(
+        <Provider store={store}>
+          <App />
+        </Provider>
+      )
       await flushPromises()
     })
 
@@ -95,9 +117,14 @@ describe('App', () => {
   it('updates statistics based on visible filtered list', async () => {
     const user = userEvent.setup()
     api.fetchActivities.mockResolvedValue(mockActivities)
+    const store = createTestStore()
 
     await act(async () => {
-      render(<App />)
+      render(
+        <Provider store={store}>
+          <App />
+        </Provider>
+      )
       await flushPromises()
     })
 
