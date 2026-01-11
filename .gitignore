@@ -1,0 +1,13 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Maven / Java
+target/
+**/target/
+
+# Node / frontend
+node_modules/
+**/node_modules/
+dist/
+**/dist/
