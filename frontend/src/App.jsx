@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { fetchActivities, createActivity, updateActivity, deleteActivity } from './api';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchActivitiesThunk, createActivityThunk, updateActivityThunk, deleteActivityThunk } from './store/activitiesSlice';
 
 function App() {
-  const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const dispatch = useDispatch();
+  const { items: activities, status, error } = useSelector(state => state.activities);
+  const loading = status === 'loading';
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -24,21 +25,8 @@ function App() {
 
   // Load activities on mount
   useEffect(() => {
-    loadActivities();
-  }, []);
-
-  const loadActivities = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchActivities();
-      setActivities(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    dispatch(fetchActivitiesThunk());
+  }, [dispatch]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -89,24 +77,23 @@ function App() {
     }
     
     setSubmitting(true);
-    setError(null);
+    
+    const activityData = {
+      name: formData.name.trim(),
+      description: formData.description.trim() || null,
+      category: formData.category.trim(),
+      date: formData.date,
+      durationMinutes: parseInt(formData.durationMinutes)
+    };
     
     try {
-      const activityData = {
-        name: formData.name.trim(),
-        description: formData.description.trim() || null,
-        category: formData.category.trim(),
-        date: formData.date,
-        durationMinutes: parseInt(formData.durationMinutes)
-      };
-      
       if (editingActivityId) {
         // Update existing activity
-        await updateActivity(editingActivityId, activityData);
+        await dispatch(updateActivityThunk({ id: editingActivityId, activity: activityData })).unwrap();
         setEditingActivityId(null);
       } else {
         // Create new activity
-        await createActivity(activityData);
+        await dispatch(createActivityThunk(activityData)).unwrap();
       }
       
       // Reset form
@@ -118,11 +105,9 @@ function App() {
         durationMinutes: ''
       });
       setFormErrors({});
-      
-      // Reload activities
-      await loadActivities();
     } catch (err) {
-      setError(err.message);
+      // Error is handled by Redux, but we can show it in form if needed
+      // The error will be in the Redux state
     } finally {
       setSubmitting(false);
     }
@@ -138,7 +123,6 @@ function App() {
     });
     setEditingActivityId(activity.id);
     setFormErrors({});
-    setError(null);
     // Scroll to form section
     document.querySelector('.form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -153,7 +137,6 @@ function App() {
       durationMinutes: ''
     });
     setFormErrors({});
-    setError(null);
   };
 
   const handleDelete = async (id) => {
@@ -161,12 +144,10 @@ function App() {
       return;
     }
     
-    setError(null);
     try {
-      await deleteActivity(id);
-      await loadActivities();
+      await dispatch(deleteActivityThunk(id)).unwrap();
     } catch (err) {
-      setError(err.message);
+      // Error is handled by Redux
     }
   };
 
