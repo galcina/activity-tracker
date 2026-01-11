@@ -1,6 +1,25 @@
 version: '3.8'
 
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: activity-tracker-db
+    environment:
+      POSTGRES_DB: activitydb
+      POSTGRES_USER: activity
+      POSTGRES_PASSWORD: activity
+    ports:
+      - "5432:5432"
+    volumes:
+      - activitydb_data:/var/lib/postgresql/data
+    networks:
+      - activity-tracker-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U activity -d activitydb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ./backend
@@ -10,6 +29,9 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - activity-tracker-network
 
@@ -26,6 +48,9 @@ services:
       - backend
     networks:
       - activity-tracker-network
+
+volumes:
+  activitydb_data:
 
 networks:
   activity-tracker-network:
