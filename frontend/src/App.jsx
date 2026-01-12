@@ -124,7 +124,7 @@ function App() {
     setEditingActivityId(activity.id);
     setFormErrors({});
     // Scroll to form section
-    document.querySelector('.form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelector('.leftPane')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handleCancelEdit = () => {
@@ -286,9 +286,9 @@ function App() {
         </div>
       )}
 
-      <div className="container">
+      <div className="page">
         {/* Form Section */}
-        <section className="form-section">
+        <section className="leftPane form-section">
           <h2>{editingActivityId ? 'Edit Activity' : 'Add New Activity'}</h2>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
@@ -397,82 +397,97 @@ function App() {
           </form>
         </section>
 
-        {/* List Section */}
-        <section className="list-section">
-          <h2>Activities</h2>
-          
-          {loading ? (
-            <div className="loading">Loading activities...</div>
-          ) : activities.length === 0 ? (
-            <div className="empty-state">No activities yet. Add one to get started!</div>
-          ) : (
-            <>
-              {/* Statistics Section */}
-              <div className="statistics-section">
-                <h3>Statistics</h3>
-                
-                <div className="stats-summary">
-                  <div className="stat-card">
-                    <div className="stat-value">{stats.totalCount}</div>
-                    <div className="stat-label">Total Activities</div>
+        {/* Right Side Content */}
+        <section className="rightPane">
+          <div className="rightGrid">
+            {/* Statistics Panel */}
+            <div className="statsPanel">
+              <h2>Statistics</h2>
+              
+              {loading ? (
+                <div className="loading">Loading activities...</div>
+              ) : activities.length === 0 ? (
+                <div className="empty-state">No activities yet. Add one to get started!</div>
+              ) : (
+                <div className="statistics-section">
+                  <div className="stats-summary">
+                    <div className="stat-card">
+                      <div className="stat-value">{stats.totalCount}</div>
+                      <div className="stat-label">Total Activities</div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-value">{stats.totalMinutes}</div>
+                      <div className="stat-label">Total Minutes</div>
+                    </div>
                   </div>
-                  <div className="stat-card">
-                    <div className="stat-value">{stats.totalMinutes}</div>
-                    <div className="stat-label">Total Minutes</div>
-                  </div>
+
+                  {stats.byCategory.length > 0 && (
+                    <div className="stats-breakdown">
+                      <h4>By Category</h4>
+                      <div className="table-container">
+                        <table className="stats-table">
+                          <thead>
+                            <tr>
+                              <th>Category</th>
+                              <th>Count</th>
+                              <th>Minutes</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {stats.byCategory.map(({ category, count, minutes }) => (
+                              <tr key={category}>
+                                <td>{category}</td>
+                                <td>{count}</td>
+                                <td>{minutes}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {stats.byDate.length > 0 && (
+                    <div className="stats-breakdown">
+                      <h4>By Date</h4>
+                      <div className="table-container">
+                        <table className="stats-table">
+                          <thead>
+                            <tr>
+                              <th>Date</th>
+                              <th>Count</th>
+                              <th>Minutes</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {stats.byDate.map(({ date, count, minutes }) => (
+                              <tr key={date}>
+                                <td>{formatDate(date)}</td>
+                                <td>{count}</td>
+                                <td>{minutes}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
+              )}
+            </div>
 
-                {stats.byCategory.length > 0 && (
-                  <div className="stats-breakdown">
-                    <h4>By Category</h4>
-                    <table className="stats-table">
-                      <thead>
-                        <tr>
-                          <th>Category</th>
-                          <th>Count</th>
-                          <th>Minutes</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {stats.byCategory.map(({ category, count, minutes }) => (
-                          <tr key={category}>
-                            <td>{category}</td>
-                            <td>{count}</td>
-                            <td>{minutes}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {stats.byDate.length > 0 && (
-                  <div className="stats-breakdown">
-                    <h4>By Date</h4>
-                    <table className="stats-table">
-                      <thead>
-                        <tr>
-                          <th>Date</th>
-                          <th>Count</th>
-                          <th>Minutes</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {stats.byDate.map(({ date, count, minutes }) => (
-                          <tr key={date}>
-                            <td>{formatDate(date)}</td>
-                            <td>{count}</td>
-                            <td>{minutes}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-
-              {/* Filter Controls */}
-              <div className="filters-container">
+            {/* List Panel */}
+            <div className="listPanel">
+              <h2>Activities</h2>
+              
+              {loading ? (
+                <div className="loading">Loading activities...</div>
+              ) : activities.length === 0 ? (
+                <div className="empty-state">No activities yet. Add one to get started!</div>
+              ) : (
+                <>
+                  {/* Filter Controls */}
+                  <div className="filters-container">
                 <div className="filters-grid">
                   <div className="filter-group">
                     <label htmlFor="search">Search</label>
@@ -610,8 +625,10 @@ function App() {
                   ))}
                 </div>
               )}
-            </>
-          )}
+                </>
+              )}
+            </div>
+          </div>
         </section>
       </div>
     </div>
